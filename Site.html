@@ -1,73 +1,60 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Controle do LED ESP8266</title>
-  <style>
-    body {
-      background-color: #00ced1;
-      font-family: Arial, sans-serif;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
     #status {
       font-size: 1.5em;
-      margin-bottom: 30px;
+      margin: 30px 0 20px;
     }
     #btn-toggle {
-      background-color: #003366;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      font-size: 1em;
-      border-radius: 12px;
-      cursor: pointer;
-    }
-    #btn-toggle:hover {
-      background-color: #005599;
+      display: none;
     }
   </style>
 </head>
 <body>
   <h1>Controle do LED (ESP8266)</h1>
-  <div id="status">Status do LED: <strong id="led-status">...</strong></div>
-  <button id="btn-toggle">Alternar LED</button>
+
+  <div id="conexao">
+    <input type="text" id="ip-esp" placeholder="Digite o IP do ESP8266">
+    <button onclick="conectarESP()">Conectar</button>
+  </div>
+
+  <div id="status" style="display: none;">Status do LED: <strong id="led-status">...</strong></div>
+  <button id="btn-toggle" onclick="alternarLED()">Alternar LED</button>
 
   <script>
-    const ledStatus = document.getElementById('led-status');
-    const btnToggle = document.getElementById('btn-toggle');
+    let ESP_HOST = "";
 
-    // ⚠️ Coloque aqui o IP local da sua placa ESP8266
-    const ESP_HOST = 'http://192.168.100.234'; // Exemplo: IP fixo do ESP8266
+    function conectarESP() {
+      const ip = document.getElementById('ip-esp').value.trim();
+      if (!ip) {
+        alert("Digite um IP válido.");
+        return;
+      }
+
+      ESP_HOST = `http://${ip}`;
+      document.getElementById('status').style.display = 'block';
+      document.getElementById('btn-toggle').style.display = 'inline-block';
+      atualizarStatus();
+    }
 
     function atualizarStatus() {
       fetch(`${ESP_HOST}/led-status`)
         .then(response => response.text())
         .then(status => {
-          ledStatus.textContent = status === '1' ? 'Ligado' : 'Desligado';
+          document.getElementById('led-status').textContent = status === '1' ? 'Ligado' : 'Desligado';
         })
         .catch(() => {
-          ledStatus.textContent = 'Erro na conexão';
+          document.getElementById('led-status').textContent = 'Erro na conexão';
         });
     }
 
-    btnToggle.addEventListener('click', () => {
+    function alternarLED() {
       fetch(`${ESP_HOST}/toggle-led`)
         .then(response => response.text())
         .then(novoEstado => {
-          ledStatus.textContent = novoEstado === '1' ? 'Ligado' : 'Desligado';
+          document.getElementById('led-status').textContent = novoEstado === '1' ? 'Ligado' : 'Desligado';
+        })
+        .catch(() => {
+          document.getElementById('led-status').textContent = 'Erro ao alternar LED';
         });
-    });
-
-    window.onload = atualizarStatus;
+    }
   </script>
 </body>
 </html>
